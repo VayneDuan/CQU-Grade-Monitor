@@ -34,14 +34,14 @@ alternative_url_jxgl = 'http://jxgl.cqu.edu.cn/'
 
         4. 启动时测试推送功能: pushTest修改为True
 '''
-mailKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 KEY      XXXXXXXXXXXXXXXXXXXXXXXXXXX'
+mailKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 MAIL KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 mailAccount =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 邮 箱     XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 username    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网账号 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 password    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网密码 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 ftKey       =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 方糖 KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 barkKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 BARK KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
-xn = 2020   #学年
+xn = 2020   # 学年
 xq = 0      # 0 上学期 1 下学期
 
 mailPush    =   False
@@ -53,7 +53,6 @@ sleepTime   =   60          #! 两次查询之间的间隔时间, 不建议修�
 url = alternative_url_202  #! 如果访问出现问题, 可以替换成: alternative_url_jxgl, 一般不用修改
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
 
-# 设置SMTP服务器以及登录信息
 mailSERVER = {
     'host': "smtp.qq.com",
     'port': 465
