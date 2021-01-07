@@ -19,7 +19,9 @@ alternative_url_jxgl = 'http://jxgl.cqu.edu.cn/'
 '''
     若在Unix系统下运行, 请取消第一行的注释.
 
-    必填: username & password
+    必填:
+        1. username & password
+        2. xn & xq
     选填:
         1. 邮箱推送 :   填写mailKey & mailAccount,
                         mailPush修改为True
@@ -32,21 +34,22 @@ alternative_url_jxgl = 'http://jxgl.cqu.edu.cn/'
 
         4. 启动时测试推送功能: pushTest修改为True
 '''
-username    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网账号 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-password    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网密码 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 mailKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 KEY      XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 mailAccount =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 邮 箱     XXXXXXXXXXXXXXXXXXXXXXXXXXX'
+username    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网账号 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
+password    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网密码 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 ftKey       =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 方糖 KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 barkKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 BARK KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
+xn = 2020   #学年
+xq = 0      # 0 上学期 1 下学期
 
 mailPush    =   False
 appPush     =   False
 wechatPush  =   False
 pushTest    =   False
 
-
-sleepTime   = 5              #! 两次查询之间的间隔时间, 不建议修改
+sleepTime   =   60          #! 两次查询之间的间隔时间, 不建议修改
 url = alternative_url_202  #! 如果访问出现问题, 可以替换成: alternative_url_jxgl, 一般不用修改
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
 
@@ -98,7 +101,7 @@ def send_to_somebody(mailAddress,course,grade):
 #* 模拟登录
 homeUrl = url+"home.aspx"
 loginUrl = url+"_data/index_login.aspx"
-scoreUrl = url+"/XSCJ/Stu_MyScore_print_rpt.aspx?xn=2020&xq=0&rpt=0&rad=2&zfx_flag=0" #xn: 学年, xq: 学期(0:上学期, 1:下学期)
+scoreUrl = url+f"/XSCJ/Stu_MyScore_print_rpt.aspx?xn={xn}&xq={xq}&rpt=0&rad=2&zfx_flag=0"
 schoolcode = "10611"
 url_google = 'http://translate.google.cn'
 reg_text = re.compile(r'(?<=TRANSLATED_TEXT=).*?;')
