@@ -17,21 +17,17 @@ alternative_url_jxgl = 'http://jxgl.cqu.edu.cn/'
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
 '''
-    若在Unix系统下运行, 请取消第一行的注释.
-
+    若在*nix系统下运行, 请取消第一行的注释.
     必填:
         1. username & password
         2. xn & xq
     选填:
         1. 邮箱推送 :   填写mailKey & mailAccount,
                         mailPush修改为True
-
         2. APP推送  :   填写barkKey,
                         appPush修改为True
-
         3. 微信推送 :   填写ftKey,
                         wechatPush修改为True
-
         4. 启动时测试推送功能: pushTest修改为True
 '''
 mailKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 MAIL KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -51,6 +47,7 @@ pushTest    =   False
 
 sleepTime   =   60          #! 两次查询之间的间隔时间, 不建议修改
 url = alternative_url_202  #! 如果访问出现问题, 可以替换成: alternative_url_jxgl, 一般不用修改
+api = "https://sc.ftqq.com/"+ftKey+".send" #! 方糖请求url, 不要修改
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
 
 mailSERVER = {
@@ -108,29 +105,14 @@ user_agent = r'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, li
                  r'Chrome/44.0.2403.157 Safari/537.36'
 last_file = ""
 
-def getView():
-    view = []
-    r = re.compile(
-        r'<input type="hidden" name="__VIEWSTATE" value="(.*?)" \/>')
-    data = requests.get(loginUrl)
-    view = r.findall(data.text)
-    r = re.compile(
-        r'<input type="hidden" name="__VIEWSTATEGENERATOR" value="(.*?)" \/>')
-    data = r.findall(data.text)
-    view.append(data[0])
-    return view
-
-def checkPwd(self):
+def checkPwd():
     p = hashlib.md5(password.encode()).hexdigest()
     p = hashlib.md5(( username + p[0:30].upper() + schoolcode).encode()).hexdigest()
     return p[0:30].upper()
 
 def login():
-    view = getView()
-    psw = checkPwd(view)
+    psw = checkPwd()
     datas = {
-        '__VIEWSTATE':view[0],
-        '__VIEWSTATEGENERATOR': view[1],
         'Sel_Type': ' STU',
         'txt_dsdsdsdjkjkjc': username,
         'txt_dsdfdfgfouyy': password,
@@ -162,7 +144,7 @@ def work(result,grade_dic,init,mark_dic):
     result = re.sub('<input.*?>', "", result)
     result = re.sub('<span.*?</span>', "", result)
     result = re.sub('<table width=.857.*?</table>', "", result)
-
+    #print(result)
     soup = BeautifulSoup(result, 'html.parser')
     s = soup.findAll('table')
     s = s[3]
@@ -183,118 +165,120 @@ def work(result,grade_dic,init,mark_dic):
     #print(grade_dic)
     return courseNum
 
-def show(final):
-    intime = open('result.html', "w")
-    intime.write(final)
-    os.startfile(r".\result.html")
-
-if __name__ == "__main__":
-    def monitor():
-        api = "https://sc.ftqq.com/"+ftKey+".send"
-
-        errorCount = 0
-        ssthresh = 1
-
-        grade_dic = {}
-        mark_dic = {}
-        html   = login()
-        result = get(html)
-        courseNum  = work(result,grade_dic,True,mark_dic)
-        print('首次启动:\n',grade_dic)
-        print(f'本学期共{courseNum}门课程')
-
-        #! 启动时进行推送测试
-        if(pushTest):
-            if(mailPush):
+def testPush():
+    if(mailPush):
                 mailCode,mailInfo = send_to_somebody(mailAccount,'启动成功====','邮件功能正常')
                 print('邮件正常')
-            if(wechatPush):
-                title = "启动成功了"
-                content = "微信推送功能正常"
-                data = {
-                "text":title,
-                "desp":content
-                }
-                req = requests.post(api,data = data)
-                print('微信推送正常')
-            if(appPush):
-                requests.get(f"https://api.day.app/{barkKey}/启动成功/手机推送功能测试正常?isArchive=1&sound=bell")
-                print('手机推送正常')
+    if(wechatPush):
+        title = "启动成功了"
+        content = "微信推送功能正常"
+        data = {
+        "text":title,
+        "desp":content
+        }
+        req = requests.post(api,data = data)
+        print('微信推送正常')
+    if(appPush):
+        requests.get(f"https://api.day.app/{barkKey}/启动成功/手机推送功能测试正常?isArchive=1&sound=bell")
+        print('手机推送正常')
 
-        while(1):
-            try:
-                new_grade_find = False
-                time.sleep(sleepTime)
-                html   = login()
-                result = get(html)
-                courseNum  = work(result,grade_dic,False,mark_dic)
+def gradePush(new_course,new_score):
+    #! [成绩推送] 邮件
+    if(mailPush):
+        mailCode,mailInfo = send_to_somebody(mailAccount,new_course,new_score)
+        if(mailCode):
+            with open('./mail.log','a',encoding='UTF-8') as f:
+                f.write(mailInfo)
+        else:
+            with open('./error.log','a',encoding='UTF-8') as f:
+                f.write(mailInfo)
 
-                new_course = 'null'
-                new_score = 'null'
-                for x in grade_dic.keys():
-                    if(grade_dic[x]!='未录入' and x not in mark_dic.keys()):
-                        new_course = str(x)
-                        new_score = str(grade_dic[x])
-                        mark_dic[x] = 1
-                        new_grade_find = True
-                        print('NEW GRADE FOUND !')
+    #! [成绩推送] 微信
+    if(wechatPush):
+        title = f"{new_course} 出成绩了"
+        content = f"你的分数是{new_score}分"
+        data = {
+        "text":title,
+        "desp":content
+        }
+        req = requests.post(api,data = data)
 
-                if(not new_grade_find):
-                    print(strftime("%Y-%m-%d %H:%M:%S", localtime()),end='\t')
-                    print("没有新成绩, 共 ", courseNum," 门, 还有 ",str(grade_dic.values()).count('未录入'), " 门没出")
-                else:
-                    print(strftime("%Y-%m-%d %H:%M:%S", localtime()),end='\t')
-                    print(f"有成绩了, {new_course}:{new_score}分")
+    #! [成绩推送] APP
+    if(appPush):
+        requests.get(f"https://api.day.app/{barkKey}/{new_course} 出成绩了/你的分数是{new_score}?isArchive=1&sound=bell")
 
-                    #! [成绩推送] 邮件
-                    if(mailPush):
-                        mailCode,mailInfo = send_to_somebody(mailAccount,new_course,new_score)
-                        if(mailCode):
-                            with open('./mail.log','a',encoding='UTF-8') as f:
-                                f.write(mailInfo)
-                        else:
-                            with open('./error.log','a',encoding='UTF-8') as f:
-                                f.write(mailInfo)
+def errorPush():
+    #! [错误报警] APP
+    if(appPush):
+        requests.get(f"https://api.day.app/{barkKey}/错误报警/程序运行出错了, 快去看看吧?isArchive=1&sound=bell")
+    #! [错误报警] 微信
+    if(wechatPush):
+        title = f"运行出错了"
+        content = f"快去检查一下吧!"
+        data = {
+        "text":title,
+        "desp":content
+        }
+        req = requests.post(api,data = data)
+    #! [错误报警] 邮件
+    if(mailPush):
+        mailCode,mailInfo = send_to_somebody(mailAccount,'程序出错了=====','程序出错了=====')
+        if(mailCode):
+            with open('./mail.log','a',encoding='UTF-8') as f:
+                f.write(mailInfo)
+        else:
+            with open('./error.log','a',encoding='UTF-8') as f:
+                f.write(mailInfo)
 
-                    #! [成绩推送] 微信
-                    if(wechatPush):
-                        title = f"{new_course} 出成绩了"
-                        content = f"你的分数是{new_score}分"
-                        data = {
-                        "text":title,
-                        "desp":content
-                        }
-                        req = requests.post(api,data = data)
+def monitor():
+    errorCount = 0
+    ssthresh = 1
+    grade_dic = {}
+    mark_dic = {}
+    html   = login()
+    result = get(html)
+    courseNum  = work(result,grade_dic,True,mark_dic)
+    print('首次启动:\n',grade_dic)
+    print(f'本学期共{courseNum}门课程')
+    #! 启动时进行推送测试
+    if(pushTest):
+        testPush()
+    while(1):
+        try:
+            new_grade_find = False
+            time.sleep(sleepTime)
+            html   = login()
+            result = get(html)
+            courseNum  = work(result,grade_dic,False,mark_dic)
 
-                    #! [成绩推送] APP
-                    if(appPush):
-                        requests.get(f"https://api.day.app/{barkKey}/{new_course} 出成绩了/你的分数是{new_score}?isArchive=1&sound=bell")
+            new_course = 'null'
+            new_score = 'null'
+            for x in grade_dic.keys():
+                if(grade_dic[x]!='未录入' and x not in mark_dic.keys()):
+                    new_course = str(x)
+                    new_score = str(grade_dic[x])
+                    mark_dic[x] = 1
+                    new_grade_find = True
+                    print('NEW GRADE FOUND !')
+            if(not new_grade_find):
+                print(strftime("%Y-%m-%d %H:%M:%S", localtime()),end='\t')
+                print("没有新成绩, 共 ", courseNum," 门, 还有 ",str(grade_dic.values()).count('未录入'), " 门没出")
+            else:
+                print(strftime("%Y-%m-%d %H:%M:%S", localtime()),end='\t')
+                print(f"有成绩了, {new_course}:{new_score}分")
+                gradePush(new_course,new_score)
 
-            except Exception as e:
+        except Exception as e:
+            errorCount+=1
+            if(errorCount==ssthresh):
+                errorPush()
+                ssthresh = 5*ssthresh
+            errorTime = strftime("%Y-%m-%d %H:%M:%S \t", localtime())
+            errorInfo = '第 '+str(errorCount) + ' 次错误\n\n'
+            s = errorTime+errorInfo
+            with open('./error.log','a',encoding='UTF-8') as f:
+                f.write(s)
+                f.write(str(e))
 
-                errorCount+=1
-
-                if(errorCount==ssthresh):
-                    #! [错误报警] APP推送
-                    if(appPush):
-                        requests.get(f"https://api.day.app/{barkKey}/错误报警/程序运行出错了, 快去看看吧?isArchive=1&sound=bell")
-                    #! [错误报警] 邮件推送
-                    if(mailPush):
-                        mailCode,mailInfo = send_to_somebody(mailAccount,'程序出错了=====','程序出错了=====')
-                        if(mailCode):
-                            with open('./mail.log','a',encoding='UTF-8') as f:
-                                f.write(mailInfo)
-                        else:
-                            with open('./error.log','a',encoding='UTF-8') as f:
-                                f.write(mailInfo)
-
-                    ssthresh = 5*ssthresh
-
-                errorTime = strftime("%Y-%m-%d %H:%M:%S \t", localtime())
-                errorInfo = '第 '+str(errorCount) + ' 次错误\n\n'
-                s = errorTime+errorInfo
-                with open('./error.log','a',encoding='UTF-8') as f:
-                    f.write(s)
-                    f.write(str(e))
-
+if __name__ == "__main__":
     monitor()
