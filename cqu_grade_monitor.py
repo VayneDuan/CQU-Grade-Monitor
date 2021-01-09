@@ -1,11 +1,10 @@
 ##!/usr/bin/env python3
 # coding:UTF-8
 # -*- coding: utf-8 -*-
-import re, os, json
-import requests, random
+import re
+import requests
 import hashlib, time
 from time import strftime, localtime
-import urllib.request
 from bs4 import BeautifulSoup
 #* 邮件发送 *#
 import smtplib
@@ -46,7 +45,7 @@ wechatPush  =   False
 pushTest    =   False
 
 sleepTime   =   60          #! 两次查询之间的间隔时间, 不建议修改
-url = alternative_url_202  #! 如果访问出现问题, 可以替换成: alternative_url_jxgl, 一般不用修改
+url = alternative_url_202  #! 如果访问出现问题, 可以替换成: alternative_url_jxgl, 一般不用修改. [2021/1/9 12:15更新, jxgl暂时不可用, 请不要更换]
 api = "https://sc.ftqq.com/"+ftKey+".send" #! 方糖请求url, 不要修改
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
 
@@ -67,7 +66,6 @@ class PersonMail(object):
         self.msg = ''
 
     def write_msg(self, subject, content):
-        # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
         self.msg = MIMEText(content, 'plain', 'utf-8')
         self.msg['From'] = Header(self.From)
         self.msg['To'] = Header(str(";".join(self.To)))
