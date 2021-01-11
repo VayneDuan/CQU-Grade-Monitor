@@ -95,7 +95,7 @@ def send_to_somebody(mailAddress,course,grade):
 #* 模拟登录
 homeUrl = url+"home.aspx"
 loginUrl = url+"_data/index_login.aspx"
-scoreUrl = url+f"/XSCJ/Stu_MyScore_print_rpt.aspx?xn={xn}&xq={xq}&rpt=0&rad=2&zfx_flag=0"
+scoreUrl = url+f"XSCJ/Stu_MyScore_print_rpt.aspx?xn={xn}&xq={xq}&rpt=0&rad=2&zfx_flag=0"
 schoolcode = "10611"
 url_google = 'http://translate.google.cn'
 reg_text = re.compile(r'(?<=TRANSLATED_TEXT=).*?;')
@@ -108,7 +108,9 @@ def checkPwd():
     p = hashlib.md5(( username + p[0:30].upper() + schoolcode).encode()).hexdigest()
     return p[0:30].upper()
 
+session = requests.Session()
 def login():
+    global session
     psw = checkPwd()
     datas = {
         'Sel_Type': ' STU',
@@ -127,10 +129,11 @@ def login():
         'Connection':'Keep-Alive',
         'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14392'
         }
-    html = requests.get(homeUrl, headers = headers)
-    cookies = html.cookies
-    requests.post(loginUrl, headers = headers, cookies = cookies, data = datas)
-    html = requests.get(scoreUrl, headers=headers, cookies=cookies)
+    html = session.get(scoreUrl, headers=headers, allow_redirects=False)
+    if html.status_code == 302: # 即若登陆 cookie 过期
+        session.get(homeUrl, headers = headers)
+        session.post(loginUrl, data = datas)
+        html = session.get(scoreUrl, headers=headers)
     return html
 
 def get(html):
