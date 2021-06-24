@@ -28,11 +28,11 @@ if xn == '' and xq == '':
   xq = not xq
   if xq == 1: xn -= 1
 
-mailPush    = conf.get('notify', 'mailPush')
+mailPush    = conf.get('notify', 'mailPush') == 'True'
 mailKey     = conf.get('notify', 'mailKey')
 mailAccount = conf.get('notify', 'mailAccount')
-appPush     = conf.get('notify', 'appPush')
+appPush     = conf.get('notify', 'appPush') == 'True'
 barkKey     = conf.get('notify', 'barkKey')
-wechatPush  = conf.get('notify', 'wechatPush')
+wechatPush  = conf.get('notify', 'wechatPush') == 'True'
 ftKey       = conf.get('notify', 'ftKey')
-pushTest    = conf.get('notify', 'pushTest')
+pushTest    = conf.get('notify', 'pushTest') == 'True'

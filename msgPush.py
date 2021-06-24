@@ -13,10 +13,6 @@ from time import strftime, localtime
 import datetime
 
 words = ['秋', '春']
-mailPush = False
-appPush = False
-wechatPush = True
-pushTest = False
 
 sleepTime = 300  # ! 两次查询之间的间隔时间, 不建议修改
 api = "https://sc.ftqq.com/"+ftKey+".send"  # ! 方糖请求url, 不要修改
@@ -65,7 +61,7 @@ class PersonMail(object):
 def send_to_somebody(mailAddress, course, grade):
   receivers = [mailAddress]
   mail = PersonMail(receivers)
-  mail.write_msg(f"{course}出成绩啦!", f"您的成绩是: {grade}分, 详情请登录 202.202.1.41 查看")
+  mail.write_msg(f"{course}出成绩啦!", f"您的成绩是: {grade}分, 详情请登录 https://my.cqu.edu.cn/sam 查看")
   code, result = mail.send_email()
   return code, result
 
@@ -94,10 +90,10 @@ def gradePush(new_course, new_score):
   if(mailPush):
     mailCode, mailInfo = send_to_somebody(mailAccount, new_course, new_score)
     if(mailCode):
-      with open('./mail.log', 'a', encoding='UTF-8') as f:
+      with open('./logs/mail.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
     else:
-      with open('./error.log', 'a', encoding='UTF-8') as f:
+      with open('./logs/error.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
 
   #! [成绩推送] 微信
@@ -135,8 +131,8 @@ def errorPush():
     mailCode, mailInfo = send_to_somebody(
         mailAccount, '程序出错了=====', '程序出错了=====')
     if(mailCode):
-      with open('./mail.log', 'a', encoding='UTF-8') as f:
+      with open('./logs/mail.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
     else:
-      with open('./error.log', 'a', encoding='UTF-8') as f:
+      with open('./logs/error.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
