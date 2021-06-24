@@ -56,12 +56,12 @@ def getClassJson(s: requests.Session, header, stuId='') -> json:
     # 课表json
     if stuId == '':
         stuId = getStrId(getStuInfoJson(s, header))
-    r = s.get('http://my.cqu.edu.cn/enroll-api/timetable/student/' + stuId,
+    r = requests.get('http://my.cqu.edu.cn/enroll-api/timetable/student/' + stuId,
               headers=header)  # 后面记得都得加这个
     return r.json()
 
 
-def getScoreJson(s: requests.Session, header) -> json:
-    r = s.get('http://my.cqu.edu.cn/sam-api/score/student/score',
+def getScoreJson(header) -> json:
+    r = requests.get('http://my.cqu.edu.cn/sam-api/score/student/score',
               headers=header)  # 后面记得都得加这个
     return r.json()
