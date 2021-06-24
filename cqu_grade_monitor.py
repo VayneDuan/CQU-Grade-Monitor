@@ -1,285 +1,97 @@
-##!/usr/bin/env python3
+# !/usr/bin/env python3
 # coding:UTF-8
 # -*- coding: utf-8 -*-
 import re
 import requests
-import hashlib, time
+import hashlib
+import time
+from consts import *
 from time import strftime, localtime
-from bs4 import BeautifulSoup
-#* 邮件发送 *#
-import smtplib
-from email.mime.text import MIMEText
-from email.header import Header
-from time import strftime, localtime
-alternative_url_202 = 'http://202.202.1.41/'
-alternative_url_jxgl = 'http://jxgl.cqu.edu.cn/'
+from msgPush import *
+from TYRZ.enroll import getScoreJson, getAccessTokenDict
+from TYRZ.tyrz import getLoginData
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
-'''
-    若在*nix系统下运行, 请取消第一行的注释.
-    必填:
-        1. username & password
-        2. xn & xq
-    选填:
-        1. 邮箱推送 :   填写mailKey & mailAccount,
-                        mailPush修改为True
-        2. APP推送  :   填写barkKey,
-                        appPush修改为True
-        3. 微信推送 :   填写ftKey,
-                        wechatPush修改为True
-        4. 启动时测试推送功能: pushTest修改为True
-'''
-mailKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 MAIL KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-mailAccount =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 邮 箱     XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-username    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网账号 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-password    =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 教务网密码 XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-ftKey       =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 方糖 KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-barkKey     =   'XXXXXXXXXXXXXXXXXXXXX 填 你 自 己 的 BARK KEY  XXXXXXXXXXXXXXXXXXXXXXXXXXX'
-
-xn = 2020   # 学年
-xq = 0      # 0 上学期 1 下学期
-
-mailPush    =   False
-appPush     =   False
-wechatPush  =   False
-pushTest    =   False
-
-sleepTime   =   60          #! 两次查询之间的间隔时间, 不建议修改
-url = alternative_url_202  #! 如果访问出现问题, 可以替换成: alternative_url_jxgl, 一般不用修改. [2021/1/9 12:15更新, jxgl暂时不可用, 请不要更换]
-api = "https://sc.ftqq.com/"+ftKey+".send" #! 方糖请求url, 不要修改
-# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
-
-mailSERVER = {
-    'host': "smtp.qq.com",
-    'port': 465
-}
-
-mailUSER = {
-    "email":mailAccount,  # 邮箱登录账号
-    "password": mailKey  # 发送人邮箱的授权码
-}
-
-class PersonMail(object):
-    def __init__(self, receivers, sender=mailUSER["email"]):
-        self.From = sender
-        self.To = receivers
-        self.msg = ''
-
-    def write_msg(self, subject, content):
-        self.msg = MIMEText(content, 'plain', 'utf-8')
-        self.msg['From'] = Header(self.From)
-        self.msg['To'] = Header(str(";".join(self.To)))
-        self.msg['Subject'] = Header(subject)
-
-    def send_email(self):
-        try:
-            smtp_client = smtplib.SMTP_SSL(mailSERVER["host"], mailSERVER["port"])
-            smtp_client.login(mailUSER["email"], mailUSER["password"])
-            smtp_client.sendmail(self.From, self.To, self.msg.as_string())
-            smtp_client.quit()
-            code = 1
-            success_info = "[INFO]\t"+strftime("%Y-%m-%d %H:%M:%S \t", localtime())+f"发送到 {self.To[0]}"+" 成功!"
-            return code,success_info
-        except smtplib.SMTPException as e:
-            code = 0
-            error_info = "[ERROR]\t"+strftime("%Y-%m-%d %H:%M:%S \t", localtime())+e
-            return code,error_info
-
-def send_to_somebody(mailAddress,course,grade):
-        receivers = [mailAddress]
-        mail = PersonMail(receivers)
-        mail.write_msg(f"{course}出成绩啦!", f"您的成绩是: {grade}分, 详情请登录 202.202.1.41 查看")
-        code,result = mail.send_email()
-        return code,result
-
-#* 模拟登录
-homeUrl = url+"home.aspx"
-loginUrl = url+"_data/index_login.aspx"
-scoreUrl = url+f"XSCJ/Stu_MyScore_print_rpt.aspx?xn={xn}&xq={xq}&rpt=0&rad=2&zfx_flag=0"
-schoolcode = "10611"
-url_google = 'http://translate.google.cn'
-reg_text = re.compile(r'(?<=TRANSLATED_TEXT=).*?;')
-user_agent = r'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
-                 r'Chrome/44.0.2403.157 Safari/537.36'
-last_file = ""
-
-def checkPwd():
-    p = hashlib.md5(password.encode()).hexdigest()
-    p = hashlib.md5(( username + p[0:30].upper() + schoolcode).encode()).hexdigest()
-    return p[0:30].upper()
-
-session = requests.Session()
-def login():
-    global session
-    psw = checkPwd()
-    datas = {
-        'Sel_Type': ' STU',
-        'txt_dsdsdsdjkjkjc': username,
-        'txt_dsdfdfgfouyy': password,
-        'txt_ysdsdsdskgf': '',
-        'pcInfo': '',
-        'typeName': '',
-        'aerererdsdxcxdfgfg': '',
-        'efdfdfuuyyuuckjg': psw
-        }
-    headers = {
-        'Accept':'text/html, application/xhtml+xml, image/jxr, */*',
-        'Accept-Encoding':'gzip, deflate',
-        'Accept-Language':'zh-Hans-CN, zh-Hans; q=0.8, en-US; q=0.5, en; q=0.3',
-        'Connection':'Keep-Alive',
-        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14392'
-        }
-    html = session.get(scoreUrl, headers=headers, allow_redirects=False)
-    if html.status_code == 302: # 即若登陆 cookie 过期
-        session.get(homeUrl, headers = headers)
-        session.post(loginUrl, data = datas)
-        html = session.get(scoreUrl, headers=headers)
-    return html
-
-def get(html):
-    html.text.encode('utf-8')
-    return html.text
-
-def work(result,grade_dic,init,mark_dic):
-    result = re.sub('<head>.*?</head>', "", result)
-    result = re.sub('<input.*?>', "", result)
-    result = re.sub('<span.*?</span>', "", result)
-    result = re.sub('<table width=.857.*?</table>', "", result)
-    #print(result)
-    soup = BeautifulSoup(result, 'html.parser')
-    s = soup.findAll('table')
-    s = s[3]
-    #print(s)
-
-    s1=s.findAll('td')
-    courseNum = len(s1)//9 -1 #*课程数量
-
-    coursePos = [10+9*i for i in range(courseNum)]
-    gradePos = [x+5 for x in coursePos]
-    for i in range(len(coursePos)):
-        name = s1[coursePos[i]].get_text()
-        pos = name.index(']')
-        name = name[pos+1:]
-        grade_dic[name] = s1[gradePos[i]].get_text()
-        if(init and s1[gradePos[i]].get_text()!='未录入'):
-            mark_dic[name] = 1
-    #print(grade_dic)
-    return courseNum
-
-def testPush():
-    if(mailPush):
-                mailCode,mailInfo = send_to_somebody(mailAccount,'启动成功====','邮件功能正常')
-                print('邮件正常')
-    if(wechatPush):
-        title = "启动成功了"
-        content = "微信推送功能正常"
-        data = {
-        "text":title,
-        "desp":content
-        }
-        req = requests.post(api,data = data)
-        print('微信推送正常')
-    if(appPush):
-        requests.get(f"https://api.day.app/{barkKey}/启动成功/手机推送功能测试正常?isArchive=1&sound=bell")
-        print('手机推送正常')
-
-def gradePush(new_course,new_score):
-    #! [成绩推送] 邮件
-    if(mailPush):
-        mailCode,mailInfo = send_to_somebody(mailAccount,new_course,new_score)
-        if(mailCode):
-            with open('./mail.log','a',encoding='UTF-8') as f:
-                f.write(mailInfo)
-        else:
-            with open('./error.log','a',encoding='UTF-8') as f:
-                f.write(mailInfo)
-
-    #! [成绩推送] 微信
-    if(wechatPush):
-        title = f"{new_course} 出成绩了"
-        content = f"你的分数是{new_score}分"
-        data = {
-        "text":title,
-        "desp":content
-        }
-        req = requests.post(api,data = data)
-
-    #! [成绩推送] APP
-    if(appPush):
-        requests.get(f"https://api.day.app/{barkKey}/{new_course} 出成绩了/你的分数是{new_score}?isArchive=1&sound=bell")
-
-def errorPush():
-    #! [错误报警] APP
-    if(appPush):
-        requests.get(f"https://api.day.app/{barkKey}/错误报警/程序运行出错了, 快去看看吧?isArchive=1&sound=bell")
-    #! [错误报警] 微信
-    if(wechatPush):
-        title = f"运行出错了"
-        content = f"快去检查一下吧!"
-        data = {
-        "text":title,
-        "desp":content
-        }
-        req = requests.post(api,data = data)
-    #! [错误报警] 邮件
-    if(mailPush):
-        mailCode,mailInfo = send_to_somebody(mailAccount,'程序出错了=====','程序出错了=====')
-        if(mailCode):
-            with open('./mail.log','a',encoding='UTF-8') as f:
-                f.write(mailInfo)
-        else:
-            with open('./error.log','a',encoding='UTF-8') as f:
-                f.write(mailInfo)
-
+import pprint   
+import os
+if not os.path.exists('./logs/error.log'):
+  with open('./logs/error.log','w', encoding='UTF-8') as f:
+    f.write('init')
+if not os.path.exists('./logs/email.log'):
+  with open('./logs/email.log','w', encoding='UTF-8') as f:
+    f.write('init')
 def monitor():
-    errorCount = 0
-    ssthresh = 1
-    grade_dic = {}
-    mark_dic = {}
-    html   = login()
-    result = get(html)
-    courseNum  = work(result,grade_dic,True,mark_dic)
-    print('首次启动:\n',grade_dic)
-    print(f'本学期共{courseNum}门课程')
-    #! 启动时进行推送测试
-    if(pushTest):
-        testPush()
-    while(1):
-        try:
-            new_grade_find = False
-            time.sleep(sleepTime)
-            html   = login()
-            result = get(html)
-            courseNum  = work(result,grade_dic,False,mark_dic)
+  errorCount = 0
+  ssthresh = 1
+  grade_dic = {}
+  mark_dic = {}
 
-            new_course = 'null'
-            new_score = 'null'
-            for x in grade_dic.keys():
-                if(grade_dic[x]!='未录入' and x not in mark_dic.keys()):
-                    new_course = str(x)
-                    new_score = str(grade_dic[x])
-                    mark_dic[x] = 1
-                    new_grade_find = True
-                    print('NEW GRADE FOUND !')
-            if(not new_grade_find):
-                print(strftime("%Y-%m-%d %H:%M:%S", localtime()),end='\t')
-                print("没有新成绩, 共 ", courseNum," 门, 还有 ",str(grade_dic.values()).count('未录入'), " 门没出")
-            else:
-                print(strftime("%Y-%m-%d %H:%M:%S", localtime()),end='\t')
-                print(f"有成绩了, {new_course}:{new_score}分")
-                gradePush(new_course,new_score)
+  s = getLoginData(username, password)
+  header = getAccessTokenDict(s)
+  s.close()
+  old_grade = {
+      'status': 'success',
+      'msg': None,
+      'data': {
+          '2021春': []
+      },
+      'code ': None
+  }
 
-        except Exception as e:
-            errorCount+=1
-            if(errorCount==ssthresh):
-                errorPush()
-                ssthresh = 5*ssthresh
-            errorTime = strftime("%Y-%m-%d %H:%M:%S \t", localtime())
-            errorInfo = '第 '+str(errorCount) + ' 次错误\n\n'
-            s = errorTime+errorInfo
-            with open('./error.log','a',encoding='UTF-8') as f:
-                f.write(s)
-                f.write(str(e))
+  # print(old_grade)
+  totalSleepTime = 0
+
+  #! 启动时进行推送测试
+  if(pushTest):
+    testPush()
+  while(1):
+    try:
+      new_grade = getScoreJson(header)
+      # print(new_grade)
+      new_grade_find = False
+      if len(new_grade['data'][f'{xn+xq}{words[xq]}']) != len(old_grade['data'][f'{xn+xq}{words[xq]}']):
+        new_grade_find = True
+
+      if totalSleepTime >= 60*60:
+        s = getLoginData(username, password)
+        s.close()
+        header = getAccessTokenDict(s)
+        totalSleepTime = 0
+
+      if(not new_grade_find):
+        print(strftime("%Y-%m-%d %H:%M:%S", localtime()), end='\t')
+        print("没有新成绩")
+        pprint.pprint(new_grade)     
+      else:
+        grades = new_grade['data'][f'{xn+xq}{words[xq]}']
+        course_num = len(grades)
+        delta_course = len(
+            new_grade['data'][f'{xn+xq}{words[xq]}']) - len(old_grade['data'][f'{xn+xq}{words[xq]}'])
+        for k in range(delta_course):
+          new_gr = new_grade['data'][f'{xn+xq}{words[xq]}'][k]
+          new_course = new_gr['courseName']
+          new_score = new_gr['effectiveScoreShow']
+          print(strftime("%Y-%m-%d %H:%M:%S", localtime()), end='\t')
+          print(f"有新成绩了, {new_course}:{new_score}分")
+          gradePush(new_course, new_score)
+      old_grade = new_grade
+
+    except Exception as e:
+      errorCount += 1
+      if(errorCount == ssthresh):
+        errorPush()
+        ssthresh = 5*ssthresh
+      errorTime = strftime("%Y-%m-%d %H:%M:%S \t", localtime())
+      errorInfo = '第 '+str(errorCount) + ' 次错误\n\n'
+      s = errorTime+errorInfo
+      with open('./logs/error.log', 'a', encoding='UTF-8') as f:
+        f.write(s)
+        f.write(str(e))
+      print(e)
+
+    totalSleepTime += sleepTime
+    time.sleep(sleepTime)
+
 
 if __name__ == "__main__":
-    monitor()
+  monitor()
