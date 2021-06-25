@@ -61,14 +61,14 @@ def monitor():
       if(not new_grade_find):
         print(strftime("%Y-%m-%d %H:%M:%S", localtime()), end='\t')
         print("没有新成绩")
-        pprint.pprint(new_grade)     
+        #pprint.pprint(new_grade)     
       else:
         grades = new_grade['data'][f'{xn+xq}{words[xq]}']
         course_num = len(grades)
         delta_course = len(
             new_grade['data'][f'{xn+xq}{words[xq]}']) - len(old_grade['data'][f'{xn+xq}{words[xq]}'])
         for k in range(delta_course):
-          new_gr = new_grade['data'][f'{xn+xq}{words[xq]}'][k]
+          new_gr = new_grade['data'][f'{xn+xq}{words[xq]}'][len(old_grade['data'][f'{xn+xq}{words[xq]}'])+k]
           new_course = new_gr['courseName']
           new_score = new_gr['effectiveScoreShow']
           print(strftime("%Y-%m-%d %H:%M:%S", localtime()), end='\t')
