@@ -11,6 +11,11 @@ from msgPush import *
 from TYRZ.enroll import getScoreJson, getAccessTokenDict
 from TYRZ.tyrz import getLoginData
 
+if useVpn:
+  import socket
+  import socks
+  socks.set_default_proxy(socks.SOCKS5, vpnUrl, vpnPort)
+  socket.socket = socks.socksocket
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * #
 import pprint   
 import os
