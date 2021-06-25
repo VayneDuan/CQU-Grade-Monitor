@@ -41,4 +41,4 @@ pushTest    = conf.get('notify', 'pushTest') == 'True'
 
 useVpn        = conf.get('vpn', 'useVPN') == 'True'
 vpnUrl        = conf.get('vpn', 'vpnUrl')
-vpnPort       = conf.get('vpn', 'vpnPort')
+vpnPort       = int(conf.get('vpn', 'vpnPort'))

@@ -4,7 +4,6 @@ import hashlib
 import time
 from consts import *
 from time import strftime, localtime
-from bs4 import BeautifulSoup
 #* 邮件发送 *#
 import smtplib
 from email.mime.text import MIMEText
