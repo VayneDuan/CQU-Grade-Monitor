@@ -36,3 +36,9 @@ barkKey     = conf.get('notify', 'barkKey')
 wechatPush  = conf.get('notify', 'wechatPush') == 'True'
 ftKey       = conf.get('notify', 'ftKey')
 pushTest    = conf.get('notify', 'pushTest') == 'True'
+
+
+
+useVpn        = conf.get('vpn', 'useVPN') == 'True'
+vpnUrl        = conf.get('vpn', 'vpnUrl')
+vpnPort       = conf.get('vpn', 'vpnPort')
