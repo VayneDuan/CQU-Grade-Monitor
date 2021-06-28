@@ -6,11 +6,35 @@
 - [x] 服务器&PC运行皆可
 - [x] 邮件通知
 - [x] 微信推送
-- [x] 手机推送(iOS)
+- [x] 手机推送(iOS Bark)
 - [x] 程序运行错误报警推送 *[邮件+微信+手机]*
 - [x] 适配新版成绩系统
 
 > ### 欢迎有想法的朋友和我邮件交流, 包括但不限于功能扩展、设计优化等
+
+   
+## :blue_heart: 运行配置说明
+
+1. **安装依赖库**：执行 `$ pip install -r requirements.txt`
+2. **键入配置**：
+   1. 将`config.example.ini`更名为`config.ini`
+   2. 按照文件内要求填写内容
+3. **运行**：
+   1. 基础运行：`$ python cqu_grade_monitor.py`
+   2. 持久化运行：
+      1. `nohup`与`输出重定向`
+
+         **`nohup python3 -u cqu_grade_monitor.py > grade.log 2>&1 &`**
+
+         - 如果想看实时监控进展, 可以通过`tail -f grade.log`查看; 
+         - 如果想看错误日志, 可以通过`cat error.log`查看; 
+         - 如果想看邮件发送日志, 可以通过`cat mail.log`查看;
+      2. `screen` 自行百度使用方法
+> 注：如果报错`No module named 'Crypto'`，可以参考[这篇文章](https://www.cnblogs.com/fawaikuangtu123/p/9761943.html)的第二条解决办法。
+
+4. 运行出错警报采用**指数退避方式**推送, 第一个目的是能实现持久警报, 防止看漏消息, 没注意到警报; 第二个目的是避免人在外面, 无法解决问题, 但是一直警报的烦恼;
+
+5.  **有问题欢迎提`issue`或者联系`vayneduan@foxmail.com`**
 
 ## :alien: 待实现
 
@@ -19,36 +43,7 @@
 - [ ] 支持`pip install`, 开箱即用
 - [ ] ~~小程序~~
 - [ ] 设计为1对多模式, 服务器跑主程序, 用户在web页面提交`username`, `password`等参数即可开始监控 
-   
-## :blue_heart: 运行配置说明
-
-0. **配置方式**
-   1. 将`config.example.ini`更名为`config.ini`
-   2. 按照文件内要求填写内容
-
-1. 可以跑在服务器上, 注意使用`nuhup`和`输出重定向`来实现后台持久化运行, 提供参考命令如下:
-
-   **`nohup python3 -u cqu_grade_monitor.py > grade.log 2>&1 &`**
-
-   - 如果想看实时监控进展, 可以通过`tail -f grade.log`查看; 
-
-   - 如果想看错误日志, 可以通过`cat error.log`查看; 
-
-   - 如果想看邮件发送日志, 可以通过`cat mail.log`查看;
-
-2. 也可以跑在自己的电脑上, `cmd`窗口实时显示, 也可以后台运行, 自行研究一下
-
-3. 需要使用到的库已经放在requirements.txt，分别是`requests`，`pycryptodome`和`bs4`, 使用pip安装的可以使用指令
-   
-   `pip install -r requirements.txt`
-
-   注：如果报错`No module named 'Crypto'`，可以参考[这篇文章](https://www.cnblogs.com/fawaikuangtu123/p/9761943.html)的第二条解决办法。
-
-4. 运行出错警报采用**指数退避方式**推送, 第一个目的是能实现持久警报, 防止看漏消息, 没注意到警报; 第二个目的是避免人在外面, 无法解决问题, 但是一直警报的烦恼;
-
-5. **脚本稳定性有待提升[学校服务器不稳定], 后续会逐渐完善, 请谅解!**
-
-6. **有问题欢迎提`issue`或者联系`vayneduan@foxmail.com`**
+  
 
 ## :warning: 特别声明
    - 本仓库发布的项目中涉及的任何脚本，仅用于测试和学习研究，禁止用于商业用途及各种引流或者任何非法目的

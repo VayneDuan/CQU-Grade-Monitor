@@ -10,7 +10,7 @@ from time import strftime, localtime
 from msgPush import *
 from TYRZ.enroll import getScoreJson, getAccessTokenDict
 from TYRZ.tyrz import getLoginData
-
+import _thread
 if useVpn:
   import socket
   import socks
@@ -22,9 +22,11 @@ import os
 if not os.path.exists('./logs/error.log'):
   with open('./logs/error.log','w', encoding='UTF-8') as f:
     f.write('init')
+    f.write("\n")
 if not os.path.exists('./logs/email.log'):
   with open('./logs/email.log','w', encoding='UTF-8') as f:
     f.write('init')
+    f.write("\n")
 def monitor():
   errorCount = 0
   ssthresh = 1
@@ -38,7 +40,7 @@ def monitor():
       'status': 'success',
       'msg': None,
       'data': {
-          '2021春': []
+          '2021春': [{'id':''}]
       },
       'code ': None
   }
@@ -69,16 +71,21 @@ def monitor():
         #pprint.pprint(new_grade)     
       else:
         grades = new_grade['data'][f'{xn+xq}{words[xq]}']
+        grades_old = old_grade['data'][f'{xn+xq}{words[xq]}']
+        old_ids = [i['id'] for i in grades_old]
         course_num = len(grades)
         delta_course = len(
             new_grade['data'][f'{xn+xq}{words[xq]}']) - len(old_grade['data'][f'{xn+xq}{words[xq]}'])
-        for k in range(delta_course):
-          new_gr = new_grade['data'][f'{xn+xq}{words[xq]}'][len(old_grade['data'][f'{xn+xq}{words[xq]}'])+k]
-          new_course = new_gr['courseName']
-          new_score = new_gr['effectiveScoreShow']
-          print(strftime("%Y-%m-%d %H:%M:%S", localtime()), end='\t')
-          print(f"有新成绩了, {new_course}:{new_score}分")
-          gradePush(new_course, new_score)
+        for j in range(course_num):
+          gr_obj = grades[j]
+          gr_id = gr_obj['id']
+          if not gr_id in old_ids:
+            new_course = gr_obj['courseName']
+            new_score = gr_obj['effectiveScoreShow']
+            print(strftime("%Y-%m-%d %H:%M:%S", localtime()), end='\t')
+            print(f"有新成绩了, {new_course}:{new_score}")
+            _thread.start_new_thread( gradePush,(new_course, new_score))
+            # gradePush(new_course, new_score)
       old_grade = new_grade
 
     except Exception as e:
@@ -92,6 +99,7 @@ def monitor():
       with open('./logs/error.log', 'a', encoding='UTF-8') as f:
         f.write(s)
         f.write(str(e))
+        f.write("\n")
       print(e)
 
     totalSleepTime += sleepTime
