@@ -40,7 +40,7 @@ def monitor():
       'status': 'success',
       'msg': None,
       'data': {
-          '2021春': [{'id':''}]
+          '2021春': []
       },
       'code ': None
   }
