@@ -60,7 +60,7 @@ class PersonMail(object):
 def send_to_somebody(mailAddress, course, grade):
   receivers = [mailAddress]
   mail = PersonMail(receivers)
-  mail.write_msg(f"{course}出成绩啦!", f"您的成绩是: {grade}分, 详情请登录 https://my.cqu.edu.cn/sam 查看")
+  mail.write_msg(f"{course}出成绩啦!", f"您的成绩是: {grade}, 详情请登录 https://my.cqu.edu.cn/sam 查看")
   code, result = mail.send_email()
   return code, result
 
@@ -91,14 +91,16 @@ def gradePush(new_course, new_score):
     if(mailCode):
       with open('./logs/mail.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
+        f.write("\n")
     else:
       with open('./logs/error.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
+        f.write("\n")
 
   #! [成绩推送] 微信
   if(wechatPush):
     title = f"{new_course}出成绩了"
-    content = f"你的分数是{new_score}分"
+    content = f"你的分数是: {new_score}"
     data = {
         "text": title,
         "desp": content
@@ -132,6 +134,8 @@ def errorPush():
     if(mailCode):
       with open('./logs/mail.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
+        f.write("\n")
     else:
       with open('./logs/error.log', 'a', encoding='UTF-8') as f:
         f.write(mailInfo)
+        f.write("\n")
